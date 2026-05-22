@@ -240,7 +240,7 @@ export async function workerCore(
   ===================================================== */
 
   const apiKey =
-    "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";
+    "";
 
   console.log(
     "🔑 OPENAI ENABLED:",
