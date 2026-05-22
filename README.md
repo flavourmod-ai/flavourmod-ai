@@ -137,6 +137,45 @@ Realtime Dashboard Sync (KV Versioning)
 
 ---
 
+# Screenshots
+
+## Architecture Diagram
+
+<p align="center">
+  <img src="screenshots/architecture-diagram.png" width="900">
+</p>
+
+---
+
+## Live Moderation Dashboard
+
+<p align="center">
+  <img src="screenshots/dashboard-main.jpeg" width="900">
+</p>
+
+---
+
+## Worker Pipeline Logs
+
+<p align="center">
+  <img src="screenshots/worker-logs.png" width="900">
+</p>
+
+---
+
+
+## State Machine
+
+
+<p align="center">
+  <img src="screenshots/state-machine.png" width="900">
+</p>
+
+
+---
+
+
+
 # 🧠 Moderation Logic
 
 | Score Range | Decision | Meaning                 |
