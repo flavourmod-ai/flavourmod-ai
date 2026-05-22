@@ -9,26 +9,39 @@ import type {
 } from "../types";
 
 /* =========================================================
-   NORMALIZERS
+   🔧 NORMALIZERS
+   (Ensure consistent scoring format across all engines)
 ========================================================= */
 
+/**
+ * Converts any value into safe 0–100 score range
+ */
 function normalizeScore(v: any): number {
   const n = Number(v);
   if (isNaN(n)) return 50;
   return Math.max(0, Math.min(100, n));
 }
 
+/**
+ * Converts confidence into 0–100 scale
+ */
 function normalizeConfidence(v: any): number {
   const n = Number(v ?? 0);
   if (n <= 1) return Math.round(n * 100);
   return Math.round(n);
 }
 
+/**
+ * Ensures flags are always string array
+ */
 function normalizeFlags(flags: any): string[] {
   if (!Array.isArray(flags)) return [];
   return flags.map(String);
 }
 
+/**
+ * Maps score → status bucket
+ */
 function normalizeStatus(status: any, score: number): AIStatus {
   if (status === "GOOD" || status === "FAIR" || status === "BAD") {
     return status;
@@ -40,7 +53,8 @@ function normalizeStatus(status: any, score: number): AIStatus {
 }
 
 /* =========================================================
-   SAFETY CLAMP
+   🛡️ SAFETY LAYER (RULE ENGINE PROTECTION)
+   Prevents extreme false negatives/positives
 ========================================================= */
 
 function clampRuleEngineScore(score: number): number {
@@ -50,23 +64,25 @@ function clampRuleEngineScore(score: number): number {
 }
 
 /* =========================================================
-   🔥 LEVEL 2.5: GLOBAL SAFETY FLOOR (IMPORTANT FIX)
+   🍲 GLOBAL SAFETY FLOOR (LEVEL 2.5 CORE FIX)
+   Ensures structured content is never wrongly punished
 ========================================================= */
 
 function applyContentSafetyFloor(score: number, contentType: string) {
   if (contentType === "recipe") {
-    return Math.max(score, 75);
+    return Math.max(score, 75); // recipes are safe structured content
   }
 
   if (contentType === "question") {
-    return Math.max(score, 65);
+    return Math.max(score, 65); // questions are generally safe
   }
 
   return score;
 }
 
 /* =========================================================
-   MAIN ENGINE
+   🚀 MAIN MODERATION ENGINE
+   Pipeline: classify → OpenAI → rule → fallback
 ========================================================= */
 
 export async function scorePost(
@@ -75,33 +91,45 @@ export async function scorePost(
   apiKey?: string
 ): Promise<AIScoreResult> {
 
-  console.log("🚀 AI ENGINE STARTED");
+  console.log("\n==============================");
+  console.log("🚀 AI MODERATION ENGINE STARTED");
+  console.log("==============================");
+
+  console.log("📝 TITLE PREVIEW:", title?.slice(0, 80));
+  console.log("📄 BODY LENGTH:", body?.length || 0);
 
   const key = apiKey ?? "";
   console.log("🔑 OPENAI ENABLED:", !!key);
 
   /* =====================================================
      STEP 1: CONTENT CLASSIFICATION
+     (Determines how rules should behave)
   ===================================================== */
 
   const contentType = classifyContent(title, body);
-  console.log("🧠 CONTENT TYPE:", contentType);
+
+  console.log("\n🧠 STEP 1: CONTENT CLASSIFICATION");
+  console.log("➡️ Detected Type:", contentType);
 
   /* =====================================================
-     STEP 2: OPENAI ENGINE (PRIMARY)
+     STEP 2: OPENAI ENGINE (PRIMARY DECISION LAYER)
   ===================================================== */
 
   if (key) {
+    console.log("\n🤖 STEP 2: OPENAI ENGINE ACTIVATED");
+
     try {
       const ai = await runOpenAIScoring(title, body, key);
+
+      console.log("📊 OpenAI Raw Result:", ai);
 
       if (ai?.score !== undefined) {
         let score = normalizeScore(ai.score);
 
-        // 🔥 APPLY SAME SAFETY LAYER TO OPENAI TOO
+        // apply safety floor
         score = applyContentSafetyFloor(score, contentType);
 
-        return {
+        const result: AIScoreResult = {
           score,
           confidence: normalizeConfidence(ai.confidence),
           status: normalizeStatus(ai.status, score),
@@ -109,33 +137,40 @@ export async function scorePost(
           reason: ai.reason ?? "OpenAI moderation completed.",
           flags: normalizeFlags(ai.flags),
         };
+
+        console.log("✅ OPENAI FINAL DECISION:", result);
+        return result;
       }
 
+      console.warn("⚠️ OpenAI returned empty score");
+
     } catch (err) {
-      console.error("❌ OPENAI FAILED:", err);
+      console.error("❌ OPENAI ENGINE FAILED:", err);
     }
   }
 
   /* =====================================================
-     STEP 3: RULE ENGINE (CONTEXT-AWARE)
+     STEP 3: RULE ENGINE (CONTEXT-AWARE FALLBACK LOGIC)
   ===================================================== */
 
-  console.log("⚡ USING RULE ENGINE");
+  console.log("\n⚡ STEP 3: RULE ENGINE ACTIVE");
 
   try {
     const rule = ruleScore(title, body, contentType);
+
+    console.log("📊 Rule Engine Raw Result:", rule);
 
     if (rule?.score !== undefined) {
 
       let score = normalizeScore(rule.score);
 
-      // clamp rule engine extremes
+      // prevent extreme rule engine behavior
       score = clampRuleEngineScore(score);
 
-      // 🔥 APPLY GLOBAL SAFETY FLOOR
+      // apply content safety protection
       score = applyContentSafetyFloor(score, contentType);
 
-      return {
+      const result: AIScoreResult = {
         score,
         confidence: normalizeConfidence(rule.confidence ?? 0.7),
         status: normalizeStatus(undefined, score),
@@ -143,6 +178,9 @@ export async function scorePost(
         reason: rule.reason ?? "Rule-based moderation completed.",
         flags: normalizeFlags(rule.flags),
       };
+
+      console.log("✅ RULE ENGINE FINAL DECISION:", result);
+      return result;
     }
 
   } catch (err) {
@@ -150,10 +188,10 @@ export async function scorePost(
   }
 
   /* =====================================================
-     STEP 4: FALLBACK ENGINE
+     STEP 4: FALLBACK ENGINE (LAST RESORT SAFETY LAYER)
   ===================================================== */
 
-  console.warn("⚠️ USING FALLBACK ENGINE");
+  console.warn("\n🛟 STEP 4: FALLBACK ENGINE ACTIVATED");
 
   const fb = fallbackScore();
 
@@ -161,7 +199,7 @@ export async function scorePost(
 
   score = applyContentSafetyFloor(score, contentType);
 
-  return {
+  const fallbackResult: AIScoreResult = {
     score,
     confidence: normalizeConfidence(fb.confidence ?? 0.5),
     status: normalizeStatus("FAIR", score),
@@ -169,4 +207,11 @@ export async function scorePost(
     reason: "Fallback moderation engine used.",
     flags: ["Fallback Engine"],
   };
+
+  console.log("🛟 FALLBACK FINAL DECISION:", fallbackResult);
+
+  console.log("\n🏁 AI MODERATION COMPLETE");
+  console.log("==============================\n");
+
+  return fallbackResult;
 }
