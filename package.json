@@ -1,0 +1,23 @@
+{
+  "name": "flavourmod-ai",
+  "version": "0.0.22",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node tools/build.ts",
+    "upload": "npm run build && npx devvit upload"
+  },
+  "dependencies": {
+    "@devvit/public-api": "0.12.23",
+    "devvit": "0.12.23",
+    "dotenv": "^17.4.2",
+    "openai": "^4.0.0",
+    "react": "^19.2.6"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.2.14",
+    "esbuild": "^0.25.0",
+    "typescript": "5.8.3"
+  }
+}
