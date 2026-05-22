@@ -240,7 +240,7 @@ export async function workerCore(
   ===================================================== */
 
   const apiKey =
-    "";
+    "DEMO-API-KEY-HERE";
 
   console.log(
     "🔑 OPENAI ENABLED:",
