@@ -319,15 +319,7 @@ DONE
 
 # 🎬 Demo Video
 
-## Recommended Demo Flow
-
-* Create Reddit post
-* Trigger moderation pipeline
-* Show worker logs
-* Show OpenAI response
-* Show moderation decision
-* Show sticky comment rendering
-* Show realtime updates
+[🎬 Watch Demo Video](https://www.loom.com/share/89d9b75e7bb945818836aef1d2fb8eeb)
 
 ---
 
