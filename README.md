@@ -1,4 +1,5 @@
-# 🔥 FlavourMod AI — Real-Time Reddit Moderation Engine
+````md
+# 🔥 FlavourMod AI ENGINE — Real-Time Reddit Moderation Engine
 
 <p align="center">
   <img src="https://img.shields.io/badge/Devvit-Reddit_App-orange?style=for-the-badge" />
@@ -9,7 +10,7 @@
 </p>
 
 <p align="center">
-  <b>Real-time AI moderation system that replaces external dashboards with live sticky comments directly inside Reddit posts.</b>
+  <b>Real-time AI moderation infrastructure that replaces external dashboards with live sticky comments directly inside Reddit posts.</b>
 </p>
 
 ---
@@ -17,12 +18,30 @@
 # 🚀 Live Concept
 
 <p align="center">
-  <img src="screenshots/dashboard-main.jpeg" width="90%">
+  <img src="screenshots/dashboard-main.jpeg" width="92%">
 </p>
 
 <p align="center">
-  Every Reddit post becomes its own <b>self-updating moderation dashboard</b>.
+  Every Reddit post becomes its own <b>self-updating AI moderation dashboard</b>.
 </p>
+
+---
+
+# 🧠 Core Innovation
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Innovation-Sticky_Comment_First_Architecture-blueviolet?style=for-the-badge" />
+</p>
+
+Unlike traditional moderation systems that rely on separate admin dashboards, FlavourMod renders moderation intelligence directly inside Reddit posts through synchronized sticky comments.
+
+This creates:
+
+* ✅ Native Reddit moderation UX
+* ✅ Transparent AI reasoning
+* ✅ Real-time moderation visibility
+* ✅ Fully in-platform moderation workflows
+* ✅ Explainable AI moderation decisions
 
 ---
 
@@ -33,81 +52,42 @@ Traditional moderation systems rely on:
 * ❌ External moderation dashboards
 * ❌ Delayed moderation visibility
 * ❌ Hidden AI decision logic
+* ❌ Fragmented moderation workflows
 * ❌ Separate moderator tooling
 
-FlavourMod introduces a different model:
+FlavourMod introduces a different architecture:
 
-* ✅ Native Reddit moderation experience
-* ✅ Real-time AI moderation visibility
-* ✅ Transparent AI reasoning
-* ✅ Sticky-comment-first architecture
-* ✅ Fully event-driven moderation pipeline
+* ✅ Real-time AI moderation
+* ✅ Sticky-comment-first moderation UX
+* ✅ Native Reddit integration
+* ✅ Transparent moderation decisions
+* ✅ Event-driven moderation pipeline
+* ✅ Live moderation directly inside posts
 
 ---
 
-# 🧠 Core Innovation
+# 🎬 Demo Video
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Innovation-Sticky_Comment_Dashboard-blueviolet?style=for-the-badge" />
+  <a href="https://www.loom.com/share/89d9b75e7bb945818836aef1d2fb8eeb">
+    <img src="https://img.shields.io/badge/Watch-Demo_Video-red?style=for-the-badge" />
+  </a>
 </p>
 
-Instead of building an external dashboard UI, FlavourMod transforms every Reddit post into a live moderation interface.
+## Demo Includes
 
-Moderation decisions are rendered directly inside Reddit using sticky comments synchronized with the AI pipeline.
-
----
-
-# ⚡ Key Features
-
-## 🧠 Hybrid AI Moderation Engine
-
-FlavourMod uses a multi-layer moderation pipeline:
-
-* 🧠 OpenAI moderation layer
-* ⚙️ Rule-based scoring engine
-* 🛡️ Safety floor protection system
-* 🔁 Fallback moderation engine
-
-### AI Output Includes
-
-* Score (0–100)
-* Confidence score
-* Moderation reasoning
-* Structured moderation flags
-* Final decision state
+* Reddit post creation
+* PostCreate trigger activation
+* KV queue processing
+* Worker execution pipeline
+* OpenAI moderation response
+* Decision engine transitions
+* Sticky comment generation
+* Real-time moderation updates
 
 ---
 
-## 🔄 Real-Time Event-Driven Pipeline
-
-```text
-PostCreate Event
-      ↓
-KV Queue Storage
-      ↓
-Lock-Safe Worker Engine
-      ↓
-AI Scoring Layer
-   ├── OpenAI Moderation
-   ├── Rule Engine
-   ├── Fallback Engine
-      ↓
-Decision Engine
-      ↓
-Sticky Comment Renderer
-```
-
-### System Features
-
-* Lock-safe worker execution
-* Multi-job queue processing
-* Real-time event broadcasting
-* State-machine-based moderation flow
-* Full trace logging and observability
-
----
-
-# 🏗️ Architecture
+# 🏗️ System Architecture
 
 ```mermaid
 graph TD;
@@ -127,6 +107,30 @@ G --> H
 H --> I[State Machine]
 I --> J[Sticky Comment Dashboard]
 J --> K[Realtime KV Sync]
+K --> L[Live Reddit Post UI]
+````
+
+---
+
+# ⚡ Real-Time Event Pipeline
+
+```text
+PostCreate Event
+      ↓
+KV Queue Storage
+      ↓
+Lock-Safe Worker Engine
+      ↓
+AI Scoring Layer
+   ├── OpenAI Moderation
+   ├── Rule Engine
+   ├── Fallback Engine
+      ↓
+Decision Engine
+      ↓
+Sticky Comment Renderer
+      ↓
+Realtime Dashboard Sync
 ```
 
 ---
@@ -138,7 +142,7 @@ J --> K[Realtime KV Sync]
 ## 🏗️ Architecture Diagram
 
 <p align="center">
-  <img src="screenshots/architecture-diagram.png" width="900">
+  <img src="screenshots/architecture-diagram.png" width="950">
 </p>
 
 ---
@@ -146,7 +150,11 @@ J --> K[Realtime KV Sync]
 ## 💬 Sticky Comment Dashboard
 
 <p align="center">
-  <img src="screenshots/dashboard-main.jpeg" width="900">
+  <img src="screenshots/dashboard-main.jpeg" width="950">
+</p>
+
+<p align="center">
+  Real-time moderation decisions rendered directly inside Reddit posts.
 </p>
 
 ---
@@ -154,42 +162,127 @@ J --> K[Realtime KV Sync]
 ## ⚡ Worker Pipeline Logs
 
 <p align="center">
-  <img src="screenshots/worker-logs.png" width="900">
+  <img src="screenshots/worker-logs.png" width="950">
+</p>
+
+<p align="center">
+  Queue lifecycle, AI execution flow, and moderation state transitions.
 </p>
 
 ---
 
-## 🔄 State Machine Flow
+## 🔄 Moderation State Machine
 
 <p align="center">
-  <img src="screenshots/state-machine.png" width="900">
+  <img src="screenshots/state-machine.png" width="950">
 </p>
+
+<p align="center">
+  Production-style moderation lifecycle tracking system.
+</p>
+
+---
+
+## 🧠 AI Moderation Report
+
+<p align="center">
+  <img src="screenshots/ai-report.png" width="950">
+</p>
+
+<p align="center">
+  Structured AI moderation reasoning with confidence and decision outputs.
+</p>
+
+---
+
+# ⚡ Key Features
+
+---
+
+## 🧠 Hybrid AI Moderation Engine
+
+FlavourMod uses a multi-layer moderation architecture:
+
+* 🧠 OpenAI moderation layer
+* ⚙️ Rule-based scoring engine
+* 🛡️ Safety floor protection system
+* 🔁 Fallback moderation engine
+* 📊 Confidence-based moderation routing
+
+### AI Output Includes
+
+* Score (0–100)
+* Confidence score
+* Moderation reasoning
+* Structured moderation flags
+* Final moderation decision
+* Traceable moderation lifecycle
+
+---
+
+## 🔄 Event-Driven Worker Infrastructure
+
+### Features
+
+* Lock-safe worker execution
+* Multi-job queue processing
+* Realtime event broadcasting
+* State-machine moderation flow
+* Full trace logging
+* Fault-tolerant processing pipeline
+* Queue synchronization system
+
+---
+
+## 💬 Sticky Comment Dashboard
+
+Each Reddit post becomes a live moderation dashboard.
+
+### Displays
+
+* AI moderation score
+* Moderation decision
+* Confidence score
+* Moderation flags
+* AI-generated reasoning
+* Live synchronization state
+
+### Why This Matters
+
+* No external dashboard required
+* Moderation becomes transparent
+* Native Reddit moderation experience
+* Live moderation visibility inside posts
 
 ---
 
 # 🧠 Moderation Intelligence
 
+---
+
 ## 🍲 Recipe Detection
 
-FlavourMod is optimized for recipe communities:
+FlavourMod is optimized for structured recipe communities:
 
 * Ingredients parsing
 * Cooking-step recognition
-* Structured recipe detection
+* Recipe structure detection
 * Food-context classification
+* Instruction-aware moderation
 
 ---
 
 ## ❓ Question Detection
 
-Detects:
+Detects instructional and educational intent:
 
 * “how”
 * “what”
 * “why”
-* instructional content
+* tutorial-style content
+* learning-oriented posts
 
-Used to reduce false removals.
+Helps reduce false removals.
 
 ---
 
@@ -198,19 +291,20 @@ Used to reduce false removals.
 Detects:
 
 * promotional patterns
-* low-quality content
 * suspicious links
-* spam signals
+* low-quality submissions
+* spam behavior signals
+* repetitive posting patterns
 
 ---
 
 # 📊 Moderation Logic
 
-| Score Range | Decision | Meaning |
-|---|---|---|
-| 80–100 | APPROVE | High-quality safe content |
-| 40–79 | REVIEW | Requires moderator inspection |
-| 0–39 | REMOVE | Unsafe or spam-like content |
+| Score Range | Decision | Meaning                       |
+| ----------- | -------- | ----------------------------- |
+| 80–100      | APPROVE  | High-quality safe content     |
+| 40–79       | REVIEW   | Requires moderator inspection |
+| 0–39        | REMOVE   | Unsafe or spam-like content   |
 
 ---
 
@@ -243,8 +337,11 @@ FlavourMod includes:
 * Sticky comment updates
 * Queue observability
 * Worker state tracking
+* Event-driven synchronization
 
-### State Machine
+---
+
+## Moderation State Machine
 
 ```text
 QUEUED
@@ -265,28 +362,33 @@ DONE
 * Lock-safe worker execution
 * Idempotent processing model
 * Fault-tolerant fallback system
-* Score normalization layer
-* AI safety floor protections
 * Queue recovery support
+* Score normalization layer
+* AI safety protections
+* Realtime synchronization safeguards
 
 ---
 
 # ⚙️ Core Components
+
+---
 
 ## 1. Devvit Trigger Layer
 
 * Captures `PostCreate` events
 * Initializes moderation jobs
 * Starts worker execution pipeline
+* Handles realtime synchronization
 
 ---
 
 ## 2. KV Queue System
 
 * Persistent moderation queue
-* Stores latest moderation jobs
+* Stores moderation jobs
 * Maintains synchronization state
-* Real-time dashboard versioning
+* Realtime dashboard versioning
+* Queue lifecycle tracking
 
 ---
 
@@ -296,6 +398,7 @@ DONE
 * Lock-safe execution
 * AI orchestration layer
 * State transition manager
+* Realtime event emitter
 
 ---
 
@@ -304,22 +407,18 @@ DONE
 * OpenAI moderation scoring
 * Rule-engine classification
 * Recipe/question/spam detection
+* Confidence normalization
 * Safety override system
 
 ---
 
 ## 5. Sticky Comment Dashboard
 
-* Native Reddit moderation UI
+* Native Reddit moderation interface
 * Live moderation visibility
-* Real-time synchronization
+* Realtime synchronization
 * Transparent AI reasoning
-
----
-
-# 🎬 Demo Video
-
-[🎬 Watch Demo Video](https://www.loom.com/share/89d9b75e7bb945818836aef1d2fb8eeb)
+* Embedded moderation reporting
 
 ---
 
@@ -350,8 +449,8 @@ npx devvit install
 
 # 🔐 Environment Variables
 
-| Variable | Purpose |
-|---|---|
+| Variable       | Purpose                  |
+| -------------- | ------------------------ |
 | OPENAI_API_KEY | OpenAI moderation access |
 
 ---
@@ -360,10 +459,11 @@ npx devvit install
 
 * Reddit recipe moderation
 * AI-assisted moderation workflows
-* Spam filtering
+* Spam filtering systems
 * Low-quality content detection
-* Real-time moderation infrastructure
-* Event-driven moderation systems
+* Realtime moderation infrastructure
+* Event-driven moderation pipelines
+* Transparent moderation systems
 
 ---
 
@@ -372,13 +472,14 @@ npx devvit install
 FlavourMod combines:
 
 * 🧠 AI reasoning
-* ⚡ Real-time event systems
+* ⚡ Realtime event systems
 * 🔄 Worker-based infrastructure
 * 💬 Native Reddit moderation UX
 * 📡 Transparent moderation visibility
 * 🏗️ Production-style architecture
+* 🔍 Explainable AI moderation
 
-Most moderation tools rely on external dashboards.
+Most moderation systems rely on external dashboards.
 
 FlavourMod brings moderation directly into Reddit itself.
 
@@ -392,6 +493,7 @@ FlavourMod brings moderation directly into Reddit itself.
 * Historical analytics engine
 * AI learning feedback loops
 * Advanced moderation metrics
+* Moderator review interface
 
 ---
 
@@ -404,6 +506,7 @@ FlavourMod is designed as a human-aligned moderation system:
 * Every action is traceable
 * Logs are audit-friendly
 * Human moderators retain final authority
+* Moderation visibility remains transparent
 
 ---
 
@@ -413,6 +516,7 @@ FlavourMod is designed as a human-aligned moderation system:
 * Optimized primarily for structured content
 * OpenAI API key required
 * Minor KV synchronization delay possible under load
+* Moderation tuning currently recipe-focused
 
 ---
 
@@ -432,5 +536,10 @@ FlavourMod transforms Reddit moderation into a real-time, AI-powered, transparen
 
 # 👨‍💻 Author
 
-Built for the Reddit Devvit ecosystem  
+Built for the Reddit Devvit ecosystem
 Focused on scalable AI moderation systems, realtime infrastructure, and event-driven architecture.
+
+---
+
+```
+```
