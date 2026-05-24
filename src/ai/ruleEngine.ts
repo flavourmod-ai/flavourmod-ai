@@ -1,20 +1,36 @@
+import type {
+  ContentType,
+} from "./contentClassifier";
+
+/* =========================================================
+   RULE ENGINE
+   ---------------------------------------------------------
+   Safe deterministic moderation layer
+========================================================= */
+
 export function ruleScore(
   title: string,
   body: string,
-  contentType?: string
+  contentType?: ContentType
 ) {
-  let score = 60;
-
-  const text = `${title} ${body}`.toLowerCase();
-  const flags: string[] = [];
 
   console.log("\n⚙️ RULE ENGINE STARTED");
-  console.log("📝 INPUT TITLE:", title?.slice(0, 60));
-  console.log("📄 INPUT BODY LENGTH:", body?.length || 0);
-  console.log("🏷️ CONTENT TYPE (from classifier):", contentType);
+
+  let score = 60;
+
+  const text =
+    `${title || ""} ${body || ""}`
+      .toLowerCase();
+
+  const flags: string[] = [];
+
+  console.log(
+    "🏷️ CONTENT TYPE:",
+    contentType
+  );
 
   /* =====================================================
-     🔥 STRONG CONTENT TYPE DETECTION (LEVEL 2.5 CORE)
+     DETECTION SIGNALS
   ===================================================== */
 
   const hasIngredients =
@@ -24,148 +40,236 @@ export function ruleScore(
     text.includes("tsp");
 
   const hasCookingSteps =
-    text.includes("add") &&
-    (
-      text.includes("cook") ||
-      text.includes("boil") ||
-      text.includes("simmer") ||
-      text.includes("heat")
-    );
+    text.includes("cook") ||
+    text.includes("boil") ||
+    text.includes("bake") ||
+    text.includes("mix") ||
+    text.includes("fry");
 
   const hasFoodContext =
-    text.includes("coconut") ||
+    text.includes("pizza") ||
     text.includes("rice") ||
-    text.includes("jaggery") ||
-    text.includes("sprout");
+    text.includes("coconut") ||
+    text.includes("recipe");
 
   const isRecipe =
     contentType === "recipe" ||
-    (hasIngredients && hasCookingSteps && hasFoodContext);
+    (
+      hasIngredients &&
+      hasCookingSteps
+    ) ||
+    (
+      hasCookingSteps &&
+      hasFoodContext
+    );
 
   const isQuestion =
-    contentType === "question" ||
-    text.includes("?") ||
-    text.startsWith("how") ||
-    text.startsWith("what") ||
-    text.startsWith("why");
+    contentType === "question";
 
   const isSpam =
-    contentType === "spam" ||
-    text.includes("buy now") ||
-    text.includes("click here") ||
-    text.includes("free money") ||
-    text.includes("earn $");
+    contentType === "spam";
 
   const hasLinks =
     text.includes("http://") ||
     text.includes("https://");
 
-  console.log("🔍 DETECTED FLAGS:", {
-    isRecipe,
-    isQuestion,
-    isSpam,
-    hasLinks
-  });
+  console.log(
+    "🔍 SIGNALS:",
+    {
+      isRecipe,
+      isQuestion,
+      isSpam,
+      hasLinks,
+    }
+  );
 
   /* =====================================================
-     🔥 PROTECTION LAYER (CORE SAFETY LOGIC)
-  ===================================================== */
-
-  const isProtectedContent = isRecipe || isQuestion;
-
-  /* =====================================================
-     🚨 NEGATIVE SIGNALS (CONTROLLED SAFE MODE)
+     SPAM PENALTIES
   ===================================================== */
 
   if (isSpam) {
+
     score -= 45;
-    flags.push("spam_signal");
-    console.warn("🚨 Spam detected → heavy penalty applied");
-  }
 
-  if (hasLinks && !isProtectedContent) {
-    score -= 5;
-    flags.push("contains_link");
-    console.log("🔗 Link detected in non-protected content → slight penalty");
-  }
+    flags.push(
+      "spam_detected"
+    );
 
-  if (text.length < 15) {
-    score -= 25;
-    flags.push("too_short");
-    console.log("⚠️ Very short content detected → penalty applied");
+    console.warn(
+      "🚨 SPAM PENALTY APPLIED"
+    );
   }
 
   /* =====================================================
-     ✅ POSITIVE SIGNALS (QUALITY BOOSTERS)
+     LINK PENALTY
+  ===================================================== */
+
+  if (
+    hasLinks &&
+    !isRecipe &&
+    !isQuestion
+  ) {
+
+    score -= 5;
+
+    flags.push(
+      "contains_link"
+    );
+
+    console.log(
+      "🔗 LINK PENALTY APPLIED"
+    );
+  }
+
+  /* =====================================================
+     SHORT CONTENT PENALTY
+  ===================================================== */
+
+  if (text.length < 15) {
+
+    score -= 25;
+
+    flags.push(
+      "too_short"
+    );
+
+    console.log(
+      "⚠️ SHORT CONTENT PENALTY"
+    );
+  }
+
+  /* =====================================================
+     QUESTION BOOST
   ===================================================== */
 
   if (isQuestion) {
+
     score += 15;
-    flags.push("question_content");
-    console.log("❓ Question detected → score boosted");
+
+    flags.push(
+      "question_content"
+    );
+
+    console.log(
+      "❓ QUESTION BOOST APPLIED"
+    );
   }
+
+  /* =====================================================
+     RECIPE BOOST
+  ===================================================== */
 
   if (isRecipe) {
+
     score += 30;
-    flags.push("recipe_content");
-    console.log("🍲 Recipe detected → strong quality boost");
+
+    flags.push(
+      "recipe_content"
+    );
+
+    console.log(
+      "🍲 RECIPE BOOST APPLIED"
+    );
   }
 
+  /* =====================================================
+     LONG CONTENT BOOST
+  ===================================================== */
+
   if (text.length > 120) {
+
     score += 10;
-    console.log("📏 Long content → minor boost");
+
+    console.log(
+      "📏 LONG CONTENT BOOST"
+    );
   }
 
   if (text.length > 300) {
+
     score += 5;
-    console.log("📏 Very long content → extra boost");
+
+    console.log(
+      "📏 EXTRA LONG CONTENT BOOST"
+    );
   }
 
   /* =====================================================
-     🛡️ LEVEL 2.5 SAFETY FLOOR (CRITICAL FIX)
+     SAFETY FLOORS
   ===================================================== */
 
   if (isRecipe) {
+
     const before = score;
-    score = Math.max(score, 75);
-    console.log(`🛡️ Recipe safety floor applied: ${before} → ${score}`);
+
+    score = Math.max(
+      score,
+      75
+    );
+
+    console.log(
+      `🛡️ RECIPE SAFETY FLOOR: ${before} → ${score}`
+    );
   }
 
   if (isQuestion) {
+
     const before = score;
-    score = Math.max(score, 65);
-    console.log(`🛡️ Question safety floor applied: ${before} → ${score}`);
+
+    score = Math.max(
+      score,
+      65
+    );
+
+    console.log(
+      `🛡️ QUESTION SAFETY FLOOR: ${before} → ${score}`
+    );
   }
 
   /* =====================================================
-     📊 FINAL NORMALIZATION
+     FINAL NORMALIZATION
   ===================================================== */
 
-  score = Math.max(5, Math.min(95, score));
-
-  console.log("📊 FINAL RULE SCORE:", score);
-  console.log("🏷️ FINAL FLAGS:", flags);
-  console.log("⚙️ RULE REASON:", isRecipe
-    ? "recipe_detected"
-    : isQuestion
-    ? "question_detected"
-    : isSpam
-    ? "spam_detected"
-    : "rule_engine"
+  score = Math.max(
+    5,
+    Math.min(95, score)
   );
 
-  console.log("⚙️ RULE ENGINE COMPLETED\n");
+  console.log(
+    "📊 FINAL RULE SCORE:",
+    score
+  );
+
+  console.log(
+    "🏷️ FLAGS:",
+    flags
+  );
+
+  console.log(
+    "⚙️ RULE ENGINE COMPLETE\n"
+  );
 
   return {
     score,
-    confidence: isRecipe ? 0.85 : 0.7,
-    reason: isRecipe
-      ? "recipe_detected"
-      : isQuestion
-      ? "question_detected"
-      : isSpam
-      ? "spam_detected"
-      : "rule_engine",
+
+    confidence:
+      isRecipe
+        ? 0.85
+        : isQuestion
+        ? 0.8
+        : isSpam
+        ? 0.95
+        : 0.7,
+
+    reason:
+      isRecipe
+        ? "recipe_detected"
+        : isQuestion
+        ? "question_detected"
+        : isSpam
+        ? "spam_detected"
+        : "rule_engine",
+
     flags,
   };
 }
