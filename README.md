@@ -234,7 +234,7 @@ J --> K[Realtime KV Sync]
 ## 🚨 Spam / Removal Detection
 
 <p align="center">
-  <img src="screenshots/spam-detection.png" width="900">
+  <img src="screenshots/spam-detection.jpeg" width="900">
 </p>
 
 ---
