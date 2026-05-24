@@ -11,6 +11,20 @@ type ModDecision =
 
 /* =========================
    SMART DECISION ENGINE
+   -------------------------------------------------
+   Final moderation decision layer
+
+   APPROVE:
+   - High score
+   - High confidence
+
+   REVIEW:
+   - Medium score
+   - OR low AI confidence
+
+   REMOVE:
+   - Very low score
+   - High confidence bad content
 ========================= */
 
 function getDecision(
@@ -23,8 +37,8 @@ function getDecision(
   ========================= */
 
   if (
-    score >= 80 &&
-    confidence >= 75
+    score >= 75 &&
+    confidence >= 70
   ) {
 
     console.log(
@@ -35,20 +49,27 @@ function getDecision(
   }
 
   /* =========================
-     HUMAN REVIEW ZONE
+     LOW AI CONFIDENCE
+     → HUMAN REVIEW
   ========================= */
 
-  // Medium-quality content
-  // OR low AI confidence
-  // goes to manual moderator review
-
-  if (
-    score >= 45 ||
-    confidence < 65
-  ) {
+  if (confidence < 60) {
 
     console.log(
-      "🟡 REVIEW QUEUE TRIGGERED"
+      "🟡 LOW CONFIDENCE REVIEW"
+    );
+
+    return "REVIEW";
+  }
+
+  /* =========================
+     MEDIUM QUALITY POSTS
+  ========================= */
+
+  if (score >= 45) {
+
+    console.log(
+      "🟡 MEDIUM SCORE REVIEW"
     );
 
     return "REVIEW";
@@ -75,7 +96,15 @@ export async function processJob(
 ) {
 
   console.log(
+    "\n=============================="
+  );
+
+  console.log(
     "🚀 PROCESS JOB STARTED"
+  );
+
+  console.log(
+    "=============================="
   );
 
   const { apiKey } = context;
@@ -100,12 +129,22 @@ export async function processJob(
     job.postId
   );
 
+  console.log(
+    "📝 TITLE:",
+    job.title?.slice(0, 80)
+  );
+
+  console.log(
+    "📄 BODY LENGTH:",
+    job.body?.length || 0
+  );
+
   /* =========================
      AI SCORE ENGINE
   ========================= */
 
   console.log(
-    "🧠 RUNNING AI SCORING"
+    "\n🧠 RUNNING AI SCORING"
   );
 
   const result =
@@ -128,6 +167,11 @@ export async function processJob(
     Number(result?.score ?? 50);
 
   if (isNaN(score)) {
+
+    console.warn(
+      "⚠️ INVALID SCORE DETECTED"
+    );
+
     score = 50;
   }
 
@@ -148,6 +192,11 @@ export async function processJob(
         );
 
   if (isNaN(confidence)) {
+
+    console.warn(
+      "⚠️ INVALID CONFIDENCE DETECTED"
+    );
+
     confidence = 50;
   }
 
@@ -157,8 +206,24 @@ export async function processJob(
   );
 
   /* =========================
+     DEBUG NORMALIZED VALUES
+  ========================= */
+
+  console.log(
+    "🧮 NORMALIZED VALUES:",
+    {
+      score,
+      confidence,
+    }
+  );
+
+  /* =========================
      SMART DECISION ENGINE
   ========================= */
+
+  console.log(
+    "\n⚖️ RUNNING DECISION ENGINE"
+  );
 
   const decision =
     getDecision(
@@ -182,6 +247,11 @@ export async function processJob(
       ? "REVIEW_QUEUE"
       : "REMOVED";
 
+  console.log(
+    "📌 STATUS:",
+    status
+  );
+
   /* =========================
      SAFE FLAGS
   ========================= */
@@ -190,6 +260,11 @@ export async function processJob(
     Array.isArray(result?.flags)
       ? result.flags
       : [];
+
+  console.log(
+    "🚩 FLAGS:",
+    flags
+  );
 
   /* =========================
      SAFE REASON
@@ -200,6 +275,11 @@ export async function processJob(
     "string"
       ? result.reason
       : "AI moderation completed.";
+
+  console.log(
+    "📝 REASON:",
+    reason
+  );
 
   /* =========================
      FINAL NORMALIZED RESULT
@@ -215,8 +295,16 @@ export async function processJob(
   };
 
   console.log(
-    "✅ FINAL PROCESS RESULT:",
+    "\n✅ FINAL PROCESS RESULT:",
     finalResult
+  );
+
+  console.log(
+    "🏁 PROCESS JOB COMPLETED"
+  );
+
+  console.log(
+    "==============================\n"
   );
 
   return finalResult;
