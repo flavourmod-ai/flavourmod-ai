@@ -226,7 +226,7 @@ J --> K[Realtime KV Sync]
 ## 🧠 AI Moderation Report
 
 <p align="center">
-  <img src="screenshots/ai-report.png" width="900">
+  <img src="screenshots/ai-report.jpeg" width="900">
 </p>
 
 ---
