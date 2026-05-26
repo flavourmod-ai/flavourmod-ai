@@ -367,7 +367,7 @@ Confidence: 70%
 # 🎬 Demo Video
 
 <p align="center">
-  <a href="https://vimeo.com/1195139157?share=copy&fl=sv&fe=ci">
+  <a href="https://vimeo.com/1195668413?share=copy&fl=sv&fe=ci">
     <img src="https://img.shields.io/badge/Watch-Demo_Video-red?style=for-the-badge" />
   </a>
 </p>
