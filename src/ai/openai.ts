@@ -340,7 +340,7 @@ function fallback(reason: string) {
 
     reason,
 
-    flags: ["AI Failure"],
+    flags: ["Fallback Analysis Active"],
 
     source: "fallback",
   };
