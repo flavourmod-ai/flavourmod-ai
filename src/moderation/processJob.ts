@@ -1,59 +1,216 @@
 import { scorePost } from "../ai/aiEngine";
 
-/* =========================
-   MODERATION DECISION TYPES
-========================= */
+/* =========================================================
+   TYPES
+========================================================= */
 
-type ModDecision =
+export type ModDecision =
   | "APPROVE"
   | "REVIEW"
   | "REMOVE";
 
-/* =========================
-   SMART DECISION ENGINE
-   -------------------------------------------------
-   Final moderation decision layer
+export type ProcessedJobResult = {
+  score: number;
+  confidence: number;
+  decision: ModDecision;
+  status:
+    | "APPROVED"
+    | "REVIEW_QUEUE"
+    | "REMOVED";
+  flags: string[];
+  reason: string;
+  source?: string;
+};
 
-   APPROVE:
-   - High score
-   - High confidence
+/* =========================================================
+   SAFE NORMALIZERS
+========================================================= */
 
-   REVIEW:
-   - Medium score
-   - OR low AI confidence
+function normalizeScore(v: any): number {
+  const n = Number(v);
 
-   REMOVE:
-   - Very low score
-   - High confidence bad content
-========================= */
+  if (isNaN(n)) {
+    console.warn("⚠️ INVALID SCORE");
+    return 50;
+  }
+
+  return Math.max(
+    0,
+    Math.min(100, Math.round(n))
+  );
+}
+
+function normalizeConfidence(v: any): number {
+  const n = Number(v ?? 0);
+
+  if (isNaN(n)) {
+    console.warn("⚠️ INVALID CONFIDENCE");
+    return 50;
+  }
+
+  // Convert 0-1 → 0-100
+  if (n <= 1) {
+    return Math.max(
+      0,
+      Math.min(100, Math.round(n * 100))
+    );
+  }
+
+  return Math.max(
+    0,
+    Math.min(100, Math.round(n))
+  );
+}
+
+/* =========================================================
+   CONTENT DETECTORS
+========================================================= */
+
+function detectRecipe(text: string): boolean {
+  return (
+    text.includes("recipe") ||
+    text.includes("ingredients") ||
+    text.includes("cook") ||
+    text.includes("boil") ||
+    text.includes("mix") ||
+    text.includes("bake") ||
+    text.includes("fry") ||
+    text.includes("tea") ||
+    text.includes("rice") ||
+    text.includes("cup") ||
+    text.includes("tbsp") ||
+    text.includes("tsp")
+  );
+}
+
+function detectLowContent(
+  title: string,
+  body: string
+): boolean {
+
+  const cleanTitle =
+    title.trim();
+
+  const cleanBody =
+    body.trim();
+
+  const combined =
+    `${cleanTitle} ${cleanBody}`
+      .trim();
+
+  const words =
+    combined
+      .split(/\s+/)
+      .filter(Boolean);
+
+  // extremely small post
+  if (words.length <= 4) {
+    return true;
+  }
+
+  // missing body
+  if (
+    cleanTitle.length > 0 &&
+    cleanBody.length < 5
+  ) {
+    return true;
+  }
+
+  // useless titles
+  const weakTitles = [
+    "hi",
+    "hello",
+    "test",
+    "computer",
+    "help",
+    "ok",
+  ];
+
+  if (
+    weakTitles.includes(
+      cleanTitle.toLowerCase()
+    )
+  ) {
+    return true;
+  }
+
+  return false;
+}
+
+/* =========================================================
+   FINAL DECISION ENGINE
+========================================================= */
 
 function getDecision(
   score: number,
-  confidence: number
+  confidence: number,
+  flags: string[]
 ): ModDecision {
 
-  /* =========================
-     HIGH QUALITY POSTS
-  ========================= */
+  const hasSpam =
+    flags.includes("spam_detected");
+
+  const hasOffTopic =
+    flags.includes("off-topic");
+
+  const hasLowContent =
+    flags.includes("low_content") ||
+    flags.includes("missing_body");
+
+  /* =====================================================
+     HARD REMOVE
+  ===================================================== */
 
   if (
-    score >= 75 &&
-    confidence >= 70
+    hasSpam ||
+    score <= 10
   ) {
 
     console.log(
-      "🟢 AUTO APPROVE TRIGGERED"
+      "🔴 HARD REMOVE"
     );
 
-    return "APPROVE";
+    return "REMOVE";
   }
 
-  /* =========================
-     LOW AI CONFIDENCE
-     → HUMAN REVIEW
-  ========================= */
+  /* =====================================================
+     LOW CONTENT
+     IMPORTANT FIX
+  ===================================================== */
 
-  if (confidence < 60) {
+  if (
+    hasLowContent
+  ) {
+
+    console.log(
+      "🟡 LOW CONTENT REVIEW"
+    );
+
+    return "REVIEW";
+  }
+
+  /* =====================================================
+     OFF TOPIC
+  ===================================================== */
+
+  if (
+    hasOffTopic
+  ) {
+
+    console.log(
+      "🟡 OFF TOPIC REVIEW"
+    );
+
+    return "REVIEW";
+  }
+
+  /* =====================================================
+     LOW CONFIDENCE
+  ===================================================== */
+
+  if (
+    confidence < 50
+  ) {
 
     console.log(
       "🟡 LOW CONFIDENCE REVIEW"
@@ -62,38 +219,77 @@ function getDecision(
     return "REVIEW";
   }
 
-  /* =========================
-     MEDIUM QUALITY POSTS
-  ========================= */
+  /* =====================================================
+     APPROVAL
+  ===================================================== */
 
-  if (score >= 45) {
+  if (
+    score >= 75 &&
+    confidence >= 70
+  ) {
 
     console.log(
-      "🟡 MEDIUM SCORE REVIEW"
+      "🟢 APPROVED"
+    );
+
+    return "APPROVE";
+  }
+
+  /* =====================================================
+     MID QUALITY
+  ===================================================== */
+
+  if (
+    score >= 45
+  ) {
+
+    console.log(
+      "🟡 MEDIUM REVIEW"
     );
 
     return "REVIEW";
   }
 
-  /* =========================
-     LOW QUALITY / SPAM
-  ========================= */
+  /* =====================================================
+     DEFAULT
+  ===================================================== */
 
   console.log(
-    "🔴 AUTO REMOVE TRIGGERED"
+    "🔴 DEFAULT REMOVE"
   );
 
   return "REMOVE";
 }
 
-/* =========================
-   MAIN JOB PROCESSOR
-========================= */
+/* =========================================================
+   STATUS MAP
+========================================================= */
+
+function getStatus(
+  decision: ModDecision
+) {
+
+  switch (decision) {
+
+    case "APPROVE":
+      return "APPROVED";
+
+    case "REVIEW":
+      return "REVIEW_QUEUE";
+
+    case "REMOVE":
+      return "REMOVED";
+  }
+}
+
+/* =========================================================
+   PROCESS JOB
+========================================================= */
 
 export async function processJob(
   context: any,
   job: any
-) {
+): Promise<ProcessedJobResult> {
 
   console.log(
     "\n=============================="
@@ -109,10 +305,6 @@ export async function processJob(
 
   const { apiKey } = context;
 
-  /* =========================
-     JOB VALIDATION
-  ========================= */
-
   if (!job?.postId) {
 
     console.error(
@@ -124,183 +316,224 @@ export async function processJob(
     );
   }
 
+  const title =
+    String(job.title || "");
+
+  const body =
+    String(job.body || "");
+
   console.log(
-    "📦 PROCESSING JOB:",
+    "📦 POST:",
     job.postId
   );
 
   console.log(
     "📝 TITLE:",
-    job.title?.slice(0, 80)
+    title.slice(0, 80)
   );
 
   console.log(
     "📄 BODY LENGTH:",
-    job.body?.length || 0
+    body.length
   );
 
-  /* =========================
-     AI SCORE ENGINE
-  ========================= */
+  /* =====================================================
+     AI ENGINE
+  ===================================================== */
 
   console.log(
-    "\n🧠 RUNNING AI SCORING"
+    "\n🧠 RUNNING AI ENGINE"
   );
 
-  const result =
+  const aiResult =
     await scorePost(
-      job.title,
-      job.body,
+      title,
+      body,
       apiKey
     );
 
   console.log(
     "📊 RAW AI RESULT:",
-    result
+    aiResult
   );
 
-  /* =========================
-     SAFE SCORE NORMALIZATION
-  ========================= */
+  /* =====================================================
+     NORMALIZATION
+  ===================================================== */
 
   let score =
-    Number(result?.score ?? 50);
-
-  if (isNaN(score)) {
-
-    console.warn(
-      "⚠️ INVALID SCORE DETECTED"
+    normalizeScore(
+      aiResult?.score
     );
-
-    score = 50;
-  }
-
-  score = Math.max(
-    0,
-    Math.min(100, score)
-  );
-
-  /* =========================
-     SAFE CONFIDENCE NORMALIZATION
-  ========================= */
 
   let confidence =
-    result?.confidence <= 1
-      ? result.confidence * 100
-      : Number(
-          result?.confidence ?? 0
-        );
-
-  if (isNaN(confidence)) {
-
-    console.warn(
-      "⚠️ INVALID CONFIDENCE DETECTED"
+    normalizeConfidence(
+      aiResult?.confidence
     );
 
-    confidence = 50;
+  const flags: string[] =
+    Array.isArray(aiResult?.flags)
+      ? aiResult.flags.map(String)
+      : [];
+
+  let reason =
+    typeof aiResult?.reason ===
+    "string"
+      ? aiResult.reason
+      : "AI moderation completed.";
+
+  const combinedText =
+    `${title} ${body}`
+      .toLowerCase();
+
+  /* =====================================================
+     LOW CONTENT FIX
+     -----------------------------------------------------
+     THIS FIXES:
+     - "computer"
+     - empty posts
+     - missing body
+     - meaningless titles
+  ===================================================== */
+
+  const lowContent =
+    detectLowContent(
+      title,
+      body
+    );
+
+  if (lowContent) {
+
+    console.warn(
+      "🟡 LOW CONTENT DETECTED"
+    );
+
+    score = Math.min(
+      score,
+      40
+    );
+
+    confidence = Math.max(
+      confidence,
+      60
+    );
+
+    if (
+      !flags.includes(
+        "low_content"
+      )
+    ) {
+
+      flags.push(
+        "low_content"
+      );
+    }
+
+    reason =
+      "Post contains insufficient or low-information content.";
   }
 
-  confidence = Math.max(
-    0,
-    Math.min(100, confidence)
-  );
+  /* =====================================================
+     OFF TOPIC FIX
+  ===================================================== */
 
-  /* =========================
-     DEBUG NORMALIZED VALUES
-  ========================= */
+  const looksLikeRecipe =
+    detectRecipe(
+      combinedText
+    );
 
-  console.log(
-    "🧮 NORMALIZED VALUES:",
-    {
-      score,
-      confidence,
+  if (
+    !looksLikeRecipe &&
+    combinedText.length > 15
+  ) {
+
+    if (
+      !flags.includes(
+        "off-topic"
+      )
+    ) {
+
+      flags.push(
+        "off-topic"
+      );
     }
-  );
+  }
 
-  /* =========================
-     SMART DECISION ENGINE
-  ========================= */
+  /* =====================================================
+     RECIPE SAFETY FLOOR
+  ===================================================== */
 
-  console.log(
-    "\n⚖️ RUNNING DECISION ENGINE"
-  );
+  if (
+    looksLikeRecipe &&
+    score < 45
+  ) {
+
+    console.warn(
+      "🛡️ RECIPE SAFETY FLOOR"
+    );
+
+    score = 75;
+
+    confidence = Math.max(
+      confidence,
+      70
+    );
+
+    if (
+      !flags.includes(
+        "recipe_content"
+      )
+    ) {
+
+      flags.push(
+        "recipe_content"
+      );
+    }
+
+    reason =
+      "Recipe-style content detected with valid cooking structure.";
+  }
+
+  /* =====================================================
+     FINAL DECISION
+  ===================================================== */
 
   const decision =
     getDecision(
       score,
-      confidence
+      confidence,
+      flags
     );
 
-  console.log(
-    "⚖️ FINAL DECISION:",
-    decision
-  );
-
-  /* =========================
-     STATUS LABEL
-  ========================= */
-
   const status =
-    decision === "APPROVE"
-      ? "APPROVED"
-      : decision === "REVIEW"
-      ? "REVIEW_QUEUE"
-      : "REMOVED";
+    getStatus(
+      decision
+    );
 
-  console.log(
-    "📌 STATUS:",
-    status
-  );
+  /* =====================================================
+     FINAL RESULT
+  ===================================================== */
 
-  /* =========================
-     SAFE FLAGS
-  ========================= */
-
-  const flags =
-    Array.isArray(result?.flags)
-      ? result.flags
-      : [];
-
-  console.log(
-    "🚩 FLAGS:",
-    flags
-  );
-
-  /* =========================
-     SAFE REASON
-  ========================= */
-
-  const reason =
-    typeof result?.reason ===
-    "string"
-      ? result.reason
-      : "AI moderation completed.";
-
-  console.log(
-    "📝 REASON:",
-    reason
-  );
-
-  /* =========================
-     FINAL NORMALIZED RESULT
-  ========================= */
-
-  const finalResult = {
+  const finalResult: ProcessedJobResult = {
     score,
     confidence,
     decision,
     status,
     flags,
     reason,
+    source: aiResult?.source,
   };
 
   console.log(
-    "\n✅ FINAL PROCESS RESULT:",
+    "\n✅ FINAL RESULT:"
+  );
+
+  console.log(
     finalResult
   );
 
   console.log(
-    "🏁 PROCESS JOB COMPLETED"
+    "🏁 PROCESS COMPLETE"
   );
 
   console.log(
