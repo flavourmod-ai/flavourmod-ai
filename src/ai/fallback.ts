@@ -1,12 +1,25 @@
-/* =========================================================
-   AI FALLBACK ENGINE
-   Used when OpenAI fails, times out, or returns invalid data
-========================================================= */
-
 import type { AIScoreResult } from "../types/index";
 
 /* =========================================================
-   MAIN FALLBACK FUNCTION
+   SCORE NORMALIZER
+========================================================= */
+
+function clampScore(n: number): number {
+  if (isNaN(n)) return 50;
+  return Math.max(0, Math.min(100, n));
+}
+
+/* =========================================================
+   CONFIDENCE NORMALIZER (IMPORTANT FIX)
+========================================================= */
+
+function normalizeConfidence(): number {
+  // fallback should NEVER pretend high confidence
+  return 35;
+}
+
+/* =========================================================
+   MAIN FALLBACK ENGINE
 ========================================================= */
 
 export function fallbackScore(
@@ -18,14 +31,21 @@ export function fallbackScore(
 ): AIScoreResult {
   console.log("⚠️ AI FALLBACK TRIGGERED:", reason);
 
-  return {
-    score: estimateBasicScore(partial?.title, partial?.body),
-    confidence: 0.25,
-    status: "ERROR",
+  const score = estimateBasicScore(partial?.title, partial?.body);
 
-    // ✅ REQUIRED FIELDS FIXED
+  return {
+    score: clampScore(score),
+
+    // FIXED: stable confidence scale
+    confidence: normalizeConfidence(),
+
+    // FIXED: avoid breaking decision engine
+    status: score >= 60 ? "FAIR" : "BAD",
+
     source: "fallback",
+
     reason: `Fallback triggered: ${reason}`,
+
     flags: ["fallback", reason],
 
     issues: [`fallback_triggered: ${reason}`],
@@ -36,16 +56,16 @@ export function fallbackScore(
     ],
 
     category: {
-      ingredients: 50,
-      steps: 50,
+      ingredients: 40,
+      steps: 40,
       clarity: 50,
-      completeness: 50,
+      completeness: 45,
     },
   };
 }
 
 /* =========================================================
-   SIMPLE HEURISTIC SCORER
+   HEURISTIC SCORER (IMPROVED)
 ========================================================= */
 
 function estimateBasicScore(title?: string, body?: string): number {
@@ -53,17 +73,25 @@ function estimateBasicScore(title?: string, body?: string): number {
 
   const text = `${title ?? ""} ${body ?? ""}`.toLowerCase();
 
-  if (text.includes("http://") || text.includes("https://")) score -= 10;
-  if (text.split(" ").length < 5) score -= 10;
+  if (!text.trim()) return 20; // empty content safety
 
-  if (text.includes("how to")) score += 5;
-  if (text.includes("recipe")) score += 5;
+  if (text.includes("http://") || text.includes("https://")) {
+    score -= 10;
+  }
+
+  if (text.split(" ").length < 5) {
+    score -= 15;
+  }
+
+  if (text.includes("how to")) score += 10;
+  if (text.includes("recipe")) score += 10;
+  if (text.includes("step")) score += 5;
 
   return Math.max(0, Math.min(100, score));
 }
 
 /* =========================================================
-   STRICT FAILURE VERSION
+   HARD FALLBACK (FAILSAFE MODE)
 ========================================================= */
 
 export function hardFallback(reason: string): AIScoreResult {
@@ -71,12 +99,13 @@ export function hardFallback(reason: string): AIScoreResult {
 
   return {
     score: 50,
-    confidence: 0.1,
-    status: "ERROR",
+    confidence: 20,
+    status: "BAD",
 
-    // ✅ REQUIRED FIELDS FIXED
     source: "fallback",
+
     reason: `Hard fallback: ${reason}`,
+
     flags: ["hard_fallback", reason],
 
     issues: [`hard_fallback: ${reason}`],
@@ -84,10 +113,10 @@ export function hardFallback(reason: string): AIScoreResult {
     suggestions: ["system degraded - manual review required"],
 
     category: {
-      ingredients: 50,
-      steps: 50,
-      clarity: 50,
-      completeness: 50,
+      ingredients: 40,
+      steps: 40,
+      clarity: 40,
+      completeness: 40,
     },
   };
 }
