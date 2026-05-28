@@ -1,23 +1,29 @@
 /* =========================================================
-   AI STATUS
+   AI STATUS (MODEL OUTPUT LEVEL)
 ========================================================= */
 
 export type AIStatus = "GOOD" | "FAIR" | "BAD" | "ERROR";
 
 /* =========================================================
-   RAW MODEL DECISION
+   RAW MODEL DECISION (LLM / RULE OUTPUT)
 ========================================================= */
 
 export type AIDecisionRaw = "ALLOW" | "REVIEW" | "REMOVE";
 
 /* =========================================================
-   FINAL SYSTEM DECISION
+   FINAL SYSTEM DECISION (WORKER LEVEL ONLY)
 ========================================================= */
 
 export type AIDecision = "APPROVE" | "REVIEW" | "REMOVE";
 
 /* =========================================================
-   CORE CATEGORY MODEL (FIXED SHAPE)
+   SOURCE OF TRUTH (CRITICAL FIX)
+========================================================= */
+
+export type AISource = "openai" | "rule_engine" | "fallback";
+
+/* =========================================================
+   CONTENT STRUCTURE SCORING
 ========================================================= */
 
 export type AICategory = {
@@ -29,40 +35,40 @@ export type AICategory = {
 };
 
 /* =========================================================
-   RAW SCORE RESULT
+   BASE AI RESULT (FROM ENGINE ONLY)
 ========================================================= */
 
 export type AIScoreResult = {
   score: number;
   confidence: number;
   status: AIStatus;
-  source: "openai" | "rule_engine" | "fallback";
+  source: AISource; // ✅ FIXED: centralized type
   reason: string;
   flags: string[];
 
   issues?: string[];
-  suggestions?: string[]; // ✅ ADD THIS
+  suggestions?: string[];
 
   category?: AICategory;
 };
 
 /* =========================================================
-   FINAL ENHANCED RESULT
+   FINAL PIPELINE RESULT (WORKER OUTPUT)
 ========================================================= */
 
-export type EnhancedAIScoreResult = AIScoreResult & {
+export type EnhancedAIScoreResult = {
+  score: number;
+  confidence: number;
+  status: "REVIEW_QUEUE" | "MODERATED" | "DONE" | "FAILED";
   decision: AIDecision;
   riskLevel: "LOW" | "MEDIUM" | "HIGH";
-
-  status:
-    | "REVIEW_QUEUE"
-    | "MODERATED"
-    | "DONE"
-    | "FAILED";
+  source: AISource;
+  reason: string;
+  flags: string[];
 };
 
 /* =========================================================
-   UI TAGS
+   UI TAGS (SAFE FOR DASHBOARD ONLY)
 ========================================================= */
 
 export type AIReasonTag =
