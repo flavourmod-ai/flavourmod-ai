@@ -199,6 +199,14 @@ J --> K[Realtime KV Sync]
 
 ---
 
+## 💬 Sticky Comment Dashboard Updated
+
+<p align="center">
+  <img src="screenshots/AI-MODERATION-DASHBOARD-UPDATED.png" width="900">
+</p>
+
+---
+
 ## 💬 Sticky Comment Dashboard
 
 <p align="center">
